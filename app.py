@@ -33,5 +33,26 @@ def get_customer(id):
 def not_found(error):
     return jsonify({'error':str(error)}),404
 
+
+
+@app.route('/customers/<int:user_id>/orders', methods=['GET'])
+def get_customer_orders(user_id):
+    conn = get_db_connection()
+    
+    # First check if customer exists
+    user = conn.execute('SELECT * FROM users WHERE user_id = ?', (user_id,)).fetchone()
+    if user is None:
+        conn.close()
+        return jsonify({"error": "Customer not found"}), 404
+
+    # Fetch all orders for that user
+    orders = conn.execute('SELECT * FROM orders WHERE user_id = ?', (user_id,)).fetchall()
+    conn.close()
+
+    if not orders:
+        return jsonify({"message": "No orders found for this customer"}), 200
+
+    return jsonify([dict(order) for order in orders])
+
 if __name__ =='__main__':
     app.run(debug=True)
